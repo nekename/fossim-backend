@@ -1,12 +1,10 @@
 #[macro_use]
 extern crate rocket;
 
-#[get("/")]
-fn index() -> &'static str {
-	"Hello, world!"
-}
+mod api;
 
 #[launch]
 fn rocket() -> _ {
-	rocket::build().mount("/", routes![index])
+	dotenvy::dotenv().expect(".env file should be present");
+	rocket::build().mount("/", routes![api::oauth::github::client_id])
 }
