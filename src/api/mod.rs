@@ -1,4 +1,5 @@
 pub mod oauth;
+pub mod webhook;
 
 use rocket::http::Status;
 use rocket::request::Request;

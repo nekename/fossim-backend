@@ -14,6 +14,9 @@ fn rocket() -> _ {
 	.expect("CORS options should be valid");
 
 	rocket::build()
-		.mount("/", routes![api::oauth::github::client_id])
+		.mount(
+			"/",
+			routes![api::oauth::github::client_id, api::webhook::github::webhook],
+		)
 		.attach(cors)
 }
