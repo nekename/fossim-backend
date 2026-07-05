@@ -2,9 +2,12 @@ mod api;
 
 use axum::{
 	Router,
-	routing::{get, post},
+	routing::{any, get, post},
 };
 use tower_http::cors::CorsLayer;
+
+#[derive(PartialEq, Eq, Hash)]
+struct Community(String, String, String);
 
 #[tokio::main]
 async fn main() {
@@ -17,7 +20,12 @@ async fn main() {
 			get(api::oauth::github::client_id),
 		)
 		.route("/api/webhook/github", post(api::webhook::github::webhook))
-		.layer(CorsLayer::permissive());
+		.route(
+			"/api/events/{forge}/{author}/{repo}",
+			any(api::events::events),
+		)
+		.layer(CorsLayer::permissive())
+		.with_state(api::EventChannels::new());
 
 	let port = std::env::var("PORT")
 		.unwrap_or_else(|_| "8000".to_string())

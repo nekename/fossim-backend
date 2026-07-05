@@ -1,11 +1,16 @@
+use super::super::EventChannels;
+
+use crate::Community;
+
 use axum::{
 	body::Bytes,
+	extract::State,
 	http::{HeaderMap, StatusCode},
 };
 use hmac::{Hmac, KeyInit, Mac};
-use octocrab::models::webhook_events::{WebhookEvent, WebhookEventPayload, WebhookEventType};
+use octocrab::models::webhook_events::{WebhookEvent, WebhookEventType};
 use sha2::Sha256;
-use tracing::{info, warn};
+use tracing::warn;
 
 type HmacSha256 = Hmac<Sha256>;
 
@@ -20,7 +25,11 @@ fn verify_signature(secret: &str, signature_header: &str, body: &[u8]) -> Result
 	mac.verify_slice(&sig_bytes).map_err(|_| ())
 }
 
-pub async fn webhook(headers: HeaderMap, body: Bytes) -> StatusCode {
+pub async fn webhook(
+	State(channels): State<EventChannels>,
+	headers: HeaderMap,
+	body: Bytes,
+) -> StatusCode {
 	let Some(event_type) = headers.get("X-GitHub-Event").and_then(|v| v.to_str().ok()) else {
 		return StatusCode::BAD_REQUEST;
 	};
@@ -54,19 +63,15 @@ pub async fn webhook(headers: HeaderMap, body: Bytes) -> StatusCode {
 	};
 
 	match event.kind {
-		WebhookEventType::Discussion => {
-			let WebhookEventPayload::Discussion(payload) = event.specific else {
-				return StatusCode::BAD_REQUEST;
-			};
-
-			info!("Received discussion event: {:?}", payload.action);
-		}
-		WebhookEventType::DiscussionComment => {
-			let WebhookEventPayload::DiscussionComment(payload) = event.specific else {
-				return StatusCode::BAD_REQUEST;
-			};
-
-			info!("Received discussion comment event: {:?}", payload.action);
+		WebhookEventType::Discussion | WebhookEventType::DiscussionComment => {
+			let text = String::from_utf8_lossy(&body);
+			let repository = event.repository.unwrap();
+			let community = Community(
+				"github".to_owned(),
+				repository.owner.unwrap().login,
+				repository.name,
+			);
+			channels.broadcast_to(&community, text);
 		}
 		_ => {}
 	}
