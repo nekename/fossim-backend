@@ -1,6 +1,6 @@
 # Fossim (backend)
 
-Rust with Rocket backend for the [Fossim application](https://github.com/nekename/fossim-application), providing community-specific forge (e.g. GitHub) authentication credentials, event notifications, and other services to Fossim clients
+Rust with Axum backend for the [Fossim application](https://github.com/nekename/fossim-application), providing community-specific forge (e.g. GitHub) authentication credentials, event notifications, and other services to Fossim clients
 
 ## Backend setup
 
@@ -25,7 +25,7 @@ OAUTH_GITHUB_CLIENT_SECRET=<your_github_client_secret>
 WEBHOOK_GITHUB_SECRET=<your_github_webhook_secret>
 ```
 
-5. Run the backend with `ROCKET_PORT=57216 cargo run` and point `https://fossim.yourdomain.com` to `http://localhost:57216` in your reverse proxy configuration (e.g. Nginx, Caddy, etc.) or using a Cloudflare Tunnel
+5. Run the backend with `PORT=57216 cargo run` and point `https://fossim.yourdomain.com` to `http://localhost:57216` in your reverse proxy configuration (e.g. Nginx, Caddy, etc.) or using a Cloudflare Tunnel
 
 ## Per-repository setup
 

@@ -6,11 +6,15 @@ license = "GPL-3.0-or-later"
 edition = "2024"
 
 [dependencies]
+axum = "0.8"
 dotenvy = "0.15"
 hex = "0.4"
 hmac = "0.13"
 octocrab = "0.53"
-rocket = { version = "0.5", features = ["json"] }
-rocket_cors = { version = "0.6", default-features = false }
 serde = { version = "1.0", features = ["derive"] }
 sha2 = "0.11"
+tokio = { version = "1", features = ["full"] }
+tower = "0.5"
+tower-http = { version = "0.7", features = ["cors", "trace"] }
+tracing = "0.1"
+tracing-subscriber = "0.3"

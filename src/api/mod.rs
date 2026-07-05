@@ -1,10 +1,11 @@
 pub mod oauth;
 pub mod webhook;
 
-use rocket::http::Status;
-use rocket::request::Request;
-use rocket::response::{self, Responder, status};
-use rocket::serde::json::Json;
+use axum::{
+	Json,
+	http::StatusCode,
+	response::{IntoResponse, Response},
+};
 use serde::Serialize;
 
 #[derive(Serialize)]
@@ -14,13 +15,13 @@ pub enum ApiResponse<T> {
 	Error { message: String },
 }
 
-impl<'r, T: Serialize> Responder<'r, 'static> for ApiResponse<T> {
-	fn respond_to(self, req: &'r Request<'_>) -> response::Result<'static> {
+impl<T: Serialize> IntoResponse for ApiResponse<T> {
+	fn into_response(self) -> Response {
 		let status = match &self {
-			ApiResponse::Success(_) => Status::Ok,
-			ApiResponse::Error { .. } => Status::InternalServerError,
+			ApiResponse::Success(_) => StatusCode::OK,
+			ApiResponse::Error { .. } => StatusCode::INTERNAL_SERVER_ERROR,
 		};
-		status::Custom(status, Json(self)).respond_to(req)
+		(status, Json(self)).into_response()
 	}
 }
 
