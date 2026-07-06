@@ -10,7 +10,7 @@ use axum::response;
 
 pub async fn events(
 	Path((forge, author, repo)): Path<(String, String, String)>,
-	State(channels): State<EventChannels>,
+	State(api_event_channels): State<EventChannels>,
 	ws: WebSocketUpgrade,
 ) -> impl response::IntoResponse {
 	if !matches!(forge.as_str(), "github") {
@@ -19,7 +19,7 @@ pub async fn events(
 			.body(axum::body::Body::empty())
 			.unwrap();
 	}
-	ws.on_upgrade(move |socket| handle_socket(socket, forge, author, repo, channels))
+	ws.on_upgrade(move |socket| handle_socket(socket, forge, author, repo, api_event_channels))
 }
 
 async fn handle_socket(
@@ -27,10 +27,12 @@ async fn handle_socket(
 	forge: String,
 	author: String,
 	repo: String,
-	channels: EventChannels,
+	api_event_channels: EventChannels,
 ) {
 	let community = Community(forge, author, repo);
-	let mut rx = channels.get_or_create_channel(community).subscribe();
+	let mut rx = api_event_channels
+		.get_or_create_channel(community)
+		.subscribe();
 
 	while let Ok(msg) = rx.recv().await {
 		if socket.send(Message::Text(msg.into())).await.is_err() {

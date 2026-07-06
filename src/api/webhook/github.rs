@@ -1,6 +1,7 @@
 use super::super::EventChannels;
 
 use crate::Community;
+use crate::channels::Channels;
 
 use axum::{
 	body::Bytes,
@@ -8,7 +9,10 @@ use axum::{
 	http::{HeaderMap, StatusCode},
 };
 use hmac::{Hmac, KeyInit, Mac};
-use octocrab::models::webhook_events::{WebhookEvent, WebhookEventType};
+use octocrab::models::webhook_events::{
+	WebhookEvent, WebhookEventPayload, WebhookEventType,
+	payload::DiscussionCommentWebhookEventAction,
+};
 use sha2::Sha256;
 use tracing::warn;
 
@@ -26,7 +30,8 @@ fn verify_signature(secret: &str, signature_header: &str, body: &[u8]) -> Result
 }
 
 pub async fn webhook(
-	State(channels): State<EventChannels>,
+	State(api_event_channels): State<EventChannels>,
+	State(channels): State<Channels>,
 	headers: HeaderMap,
 	body: Bytes,
 ) -> StatusCode {
@@ -63,7 +68,7 @@ pub async fn webhook(
 	};
 
 	match event.kind {
-		WebhookEventType::Discussion | WebhookEventType::DiscussionComment => {
+		WebhookEventType::Discussion => {
 			let text = String::from_utf8_lossy(&body);
 			let repository = event.repository.unwrap();
 			let community = Community(
@@ -71,7 +76,33 @@ pub async fn webhook(
 				repository.owner.unwrap().login,
 				repository.name,
 			);
-			channels.broadcast_to(&community, text);
+			api_event_channels.broadcast_to(&community, text);
+		}
+		WebhookEventType::DiscussionComment => {
+			let text = String::from_utf8_lossy(&body);
+			let repository = event.repository.unwrap();
+			let community = Community(
+				"github".to_owned(),
+				repository.owner.unwrap().login,
+				repository.name,
+			);
+			api_event_channels.broadcast_to(&community, text);
+
+			let WebhookEventPayload::DiscussionComment(payload) = event.specific else {
+				return StatusCode::BAD_REQUEST;
+			};
+			if payload.action == DiscussionCommentWebhookEventAction::Created
+				&& payload
+					.comment
+					.get("parent_id")
+					.map(|x| x.is_null())
+					.unwrap_or(true)
+				&& let Err(err) = channels.increment_seq_counter(
+					&community,
+					payload.discussion.get("node_id").unwrap().as_str().unwrap(),
+				) {
+				warn!("Failed to increment seq count: {err}");
+			}
 		}
 		_ => {}
 	}

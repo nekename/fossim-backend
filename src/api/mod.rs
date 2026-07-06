@@ -1,3 +1,4 @@
+pub mod channels;
 pub mod events;
 pub mod oauth;
 pub mod webhook;
