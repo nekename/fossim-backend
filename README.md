@@ -6,6 +6,7 @@ Rust with Axum backend for the [Fossim application](https://github.com/nekename/
 
 1. Install Rust and clone this repository
 2. Create a GitHub App from GitHub Developer Settings (other forge providers may be supported in the future)
+	- Set the app name to `[username]'s Fossim` or `[project name]'s Fossim` (or something else if you prefer)
 	- Enable the Device Flow for client authentication
 	- Enable a webhook for the app pointing to `https://fossim.yourdomain.com/api/webhook/github` (replace `yourdomain.com` with your domain)
 		- Use a high-entropy string for the webhook secret (e.g. `openssl rand -hex 32`)
@@ -37,6 +38,9 @@ WEBHOOK_GITHUB_SECRET=<your_github_webhook_secret>
 
 ```json
 {
-	"host": "https://fossim.yourdomain.com"
+	"host": "https://fossim.yourdomain.com",
+	"name": "Your Project Name (optional)",
+	"icon": "https://yourdomain.com/path/to/project/icon.png (optional)",
+	"banner": "https://yourdomain.com/path/to/project/banner.png (optional)"
 }
 ```
