@@ -1,0 +1,12 @@
+services:
+  fossim-backend:
+    image: ghcr.io/nekename/fossim-backend:latest
+    volumes:
+      - ./db:/app/db
+    ports:
+      - 57216:8000
+    environment:
+      - OAUTH_GITHUB_CLIENT_ID=YOUR_GITHUB_CLIENT_ID
+      - OAUTH_GITHUB_CLIENT_SECRET=YOUR_GITHUB_CLIENT_SECRET
+      - WEBHOOK_GITHUB_SECRET=YOUR_GITHUB_WEBHOOK_SECRET
+    restart: unless-stopped

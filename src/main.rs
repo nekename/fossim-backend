@@ -32,7 +32,7 @@ impl FromRef<AppState> for channels::Channels {
 #[tokio::main]
 async fn main() {
 	tracing_subscriber::fmt::init();
-	dotenvy::dotenv().expect(".env file should be present");
+	let _ = dotenvy::dotenv();
 
 	let app = Router::new()
 		.route(
